@@ -1,10 +1,11 @@
 import streamlit as st
 #crawling.py와 연결시키기
 #from 파일명 import 파일 내 함수, 클래스 -> 해당 파일의 일부 함수/클래스만 임포트
-from crawling import crawling_saramin, crawling_work24
+from crawling import crawling_saramin, crawling_work24, download_to_csv
 #import crawling as cr 로 정의해서 
 #아래에 해당되는 부분에 cr.crawling_saramin~ 이런식으로 적용 가능
 
+import pandas as pd
 
 #레이아웃 (웹 페이지 생김새)
 #스트림릿 웹페이지의 '헤더' 역할
@@ -49,6 +50,7 @@ with st.expander('상세 검색 조건', expanded = True):
             }
             selected_location = st.multiselect('지역을 선택하세요',list(loc_options.keys()), default = ['서울'])
             #크롤링 진행할때 사용하기 위해 문자열 추출
+            #지역 
             #selected_location으로 '지역명' 추출
             #loc_options가 딕셔너리이므로, loc_options[x] => x라는 '지역(키)'에 해당하는 '값'이 불러와짐
             #if조건이 붙은 이유: 예외처리. 지역명 없는 지역이면 추가 안되도록
@@ -112,10 +114,10 @@ if crawling_clicked :
         with st.spinner(f'{site_select}에서 {search_text} 검색 결과 가져오는 중...'):
             if site_select == '사람인':
                 #사람인 사이트의 내용을 크롤링하는 함수
-                df = crawling_saramin()
+                df = crawling_saramin(search_text = search_text, except_text = except_text, region=locations,category=category, career = career, education = edu, max_pages=max_pages)
             else:
                 #고용24 사이트의 내용을 크롤링하는 함수
-                df = crawling_work24()
+                df = crawling_work24(search_text =search_text , except_text=except_text , region=region, category=occupation, career = career, education = edu , max_pages= max_pages)
     st.session_state['df'] = df
 #st.session_state: 
 #스트림릿은 모든 상황에 랜더링을 진행하기에 크롤링 내용이 날아감
@@ -123,3 +125,14 @@ if crawling_clicked :
 #session_state: '딕셔너리'처럼 저장해줌
 #session_state['df']로 키 지정. 이후로는 다시 df로 정의
 df = st.session_state['df']
+st.write(df)
+
+#검색어 없는 화면 에러 방지용
+if not df.empty:
+    st.subheader('검색 결과')
+    st.dataframe(df, user_container_width = True, hide_index=True)
+    csv_data = download_to_csv(df)
+    st.download_button(label='CSV 결과 다운로드', data=csv_data, file_name= f'crawling_results_{site_select}.csv', mime = 'text/csv')
+
+if 'df' not in st.session_state:
+    st.session_state['df'] = pd.DataFrame()
