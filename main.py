@@ -1,7 +1,7 @@
 import streamlit as st
 #crawling.py와 연결시키기
 #from 파일명 import 파일 내 함수, 클래스 -> 해당 파일의 일부 함수/클래스만 임포트
-from crawling import crawling_saramin, crawling_work24, download_to_csv
+from crawler import crawling_saramin, crawling_work24, download_to_csv
 #import crawling as cr 로 정의해서 
 #아래에 해당되는 부분에 cr.crawling_saramin~ 이런식으로 적용 가능
 
@@ -99,7 +99,8 @@ crawling_clicked = st.button("크롤링 시작", use_container_width= True, type
 # else:
 #     st.write('버튼을 안 누름')
 
-
+if 'df' not in st.session_state:
+    st.session_state['df'] = pd.DataFrame()
 #크롤링 시행
 #1. 크롤링 결과를 어떻게 받아올 것인가?
 #df = 
@@ -130,9 +131,7 @@ st.write(df)
 #검색어 없는 화면 에러 방지용
 if not df.empty:
     st.subheader('검색 결과')
-    st.dataframe(df, user_container_width = True, hide_index=True)
+    st.dataframe(df, use_container_width = True, hide_index=True)
     csv_data = download_to_csv(df)
     st.download_button(label='CSV 결과 다운로드', data=csv_data, file_name= f'crawling_results_{site_select}.csv', mime = 'text/csv')
 
-if 'df' not in st.session_state:
-    st.session_state['df'] = pd.DataFrame()
